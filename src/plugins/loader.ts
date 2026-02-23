@@ -23,6 +23,7 @@ import { createPluginRegistry, type PluginRecord, type PluginRegistry } from "./
 import { setActivePluginRegistry } from "./runtime.js";
 import { createPluginRuntime } from "./runtime/index.js";
 import { validateJsonSchemaValue } from "./schema-validator.js";
+import { getToolRegistry } from "./tool-registry.js";
 import type {
   OpenClawPluginDefinition,
   OpenClawPluginModule,
@@ -453,6 +454,16 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
       continue;
     }
     const pluginId = manifestRecord.id;
+    // ─── GATE A: Tool Governance Allowlist ───────────────────────────────────
+    // Hard enforcement: if the extension is not registered as 'active' in
+    // tool_registry.db it must not load — not even as a disabled record.
+    // Fail-closed: if the registry DB is unavailable, all extensions are blocked.
+    if (!getToolRegistry().isAllowedSync(pluginId)) {
+      logger.info(`[tool-governance] skip "${pluginId}" (allow_status != active)`);
+      continue;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const existingOrigin = seenIds.get(pluginId);
     if (existingOrigin) {
       const record = createPluginRecord({

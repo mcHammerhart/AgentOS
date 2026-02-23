@@ -4,6 +4,7 @@ import { createSubsystemLogger } from "../logging/subsystem.js";
 import { applyTestPluginDefaults, normalizePluginsConfig } from "./config-state.js";
 import { loadOpenClawPlugins } from "./loader.js";
 import { createPluginLoaderLogger } from "./logger.js";
+import { getToolRegistry } from "./tool-registry.js";
 import type { OpenClawPluginToolContext } from "./types.js";
 
 const log = createSubsystemLogger("plugins");
@@ -87,6 +88,15 @@ export function resolvePluginTools(params: {
       blockedPlugins.add(entry.pluginId);
       continue;
     }
+    // ─── GATE B: Tool Execution Governance ───────────────────────────────────
+    // Secondary enforcement: block execution even if a tool somehow made it past
+    // Gate A (e.g. cache race, manual load, future code paths).
+    if (!getToolRegistry().isAllowedSync(entry.pluginId)) {
+      log.warn(`[tool-governance] blocked execution of "${entry.pluginId}" — not in allowlist`);
+      continue;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     let resolved: AnyAgentTool | AnyAgentTool[] | null | undefined = null;
     try {
       resolved = entry.factory(params.context);
