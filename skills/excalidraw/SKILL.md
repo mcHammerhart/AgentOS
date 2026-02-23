@@ -6,11 +6,19 @@
 
 1. Design the diagram elements as Excalidraw JSON (see format below)
 2. Save to a `.excalidraw` file in `~/agent-os/diagrams/` (create dir if needed)
-3. Run the export script to get a shareable URL:
+3. Open locally (default — no upload, safe for confidential diagrams):
    ```bash
-   node /Users/tilohammer/agent-os/bin/excalidraw_export.js /path/to/diagram.excalidraw
+   python3 /Users/tilohammer/agent-os/bin/excalidraw_view.py /path/to/diagram.excalidraw
    ```
-4. Reply with the URL + brief description
+4. Reply with the local file path
+
+**⚠️ Only upload to excalidraw.com when Tilo explicitly asks for a shareable link:**
+
+```bash
+node /Users/tilohammer/agent-os/bin/excalidraw_export.js /path/to/diagram.excalidraw
+```
+
+This sends data to excalidraw.com servers — do NOT use for confidential diagrams.
 
 ---
 
