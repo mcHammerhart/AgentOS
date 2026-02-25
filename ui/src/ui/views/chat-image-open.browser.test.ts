@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import "../app.ts";
 import { mountApp, registerAppMountHooks } from "../test-helpers/app-mount.ts";
 
 registerAppMountHooks();
@@ -43,6 +42,23 @@ describe("chat image open safety", () => {
 
     const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
     app.chatMessages = [renderAssistantImage("javascript:alert(1)")];
+    await app.updateComplete;
+
+    const image = app.querySelector<HTMLImageElement>(".chat-message-image");
+    expect(image).not.toBeNull();
+    image?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not open SVG data image URLs", async () => {
+    const app = mountApp("/chat");
+    await app.updateComplete;
+
+    const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
+    app.chatMessages = [
+      renderAssistantImage("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' />"),
+    ];
     await app.updateComplete;
 
     const image = app.querySelector<HTMLImageElement>(".chat-message-image");
